@@ -1,14 +1,14 @@
-CV Julien Govaarts
+## CV Julien Govaarts
 
 
-Profile
+#### Profile
 
 Interested in the economy, especially in the way how all individual factors in the economy, such as private and public organizations, banks, governments and consumers, cooperate. Well developed with regards to my social skills, since I believe that the application of social skills in my career is really important.
 Ambitious about my future and always driven to set goals and to strive for new ones. Highly motivated to obtain good experiences and skills before taking part in corporate life. 
 
 
 
-Education
+#### Education
 
 * MSc Economics – Tilburg		      							
 2016 – Present	
@@ -34,7 +34,7 @@ Profile: Science & Engineering
 Exam courses: Advanced Mathematics, Chemistry, Dutch, English, German, ICT, Latin, Management & Organization and Physics.
 
 
-Experience
+#### Experience
 
 * Associate Consultant 							
 May 2016 – August 2016	
@@ -57,4 +57,30 @@ Organized with a team of seven people, led the team in good order and conducted 
 June 2014 – August 2014	
 Youth Entrepreneurial Project – Bandar Lampung (Indonesia)	
 Providing business advice to six local SME’s after company visits through presentations and reports.
+
+
+
+#### Courses
+
+* Krauthammer Training  
+Six professional training sessions about communication, leadership, bright side of management, tough side of management, team work and negotiation.
+
+* Outreaching Lab: Banks and Buffers  
+Research into the financial sector and the adequate capital requirements for banks with regards to Basel III and TLAC. Executed in cooperation with prof. Folpmers, the Vice-President of Capgemini Consulting.
+
+* Outreaching Lab: Integrity Management 
+Research into the Integrity Management at Tilburg University. Provided great researching, team working and interviewing skills, as well as presentation skills during the final presentation of the findings.
+
+
+#### Skills
+
+* Driving license   
+Full current clean driving license.
+
+* Language  
+Native language: Dutch  
+Excellent English. English presentation CEFR level C1+
+
+* Presentation skills
+
 
