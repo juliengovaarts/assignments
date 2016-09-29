@@ -1,5 +1,7 @@
 ## CV Julien Govaarts
 
+<img src="https://github.com/juliengovaarts/assignments/blob/master/BW160520262-2HR.jpg" width="110" align="right">
+
 
 #### Profile
 ---
