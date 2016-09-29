@@ -2,27 +2,27 @@
 
 
 #### Profile
-
+---
 Interested in the economy, especially in the way how all individual factors in the economy, such as private and public organizations, banks, governments and consumers, cooperate. Well developed with regards to my social skills, since I believe that the application of social skills in my career is really important.
 Ambitious about my future and always driven to set goals and to strive for new ones. Highly motivated to obtain good experiences and skills before taking part in corporate life. 
 
 
 
 #### Education
-
+---
 * __MSc Economics – Tilburg__		      							
 _2016 – Present_	
 Tilburg University	
 Track: Behavioural Economics
 
 * __BSc Economics & Businesseconomics – Tilburg__						
-_2012 – 2015_	
+_2012 – 2015_	  
 Tilburg University	
 Average grade: 7.8/10	
 BSc Thesis: Do EVA-based managerial compensation plans solve the time-horizon conflict?
 
 * __Outreaching Honors Program - Tilburg__			  				
-_2013 – 2015_	
+_2013 – 2015_	  
 The Outreaching Program is specifically aimed at a select group of outstanding bachelor students and educates them to contribute to society by solving societal issues through innovative and pioneering means.		
 This Outreaching Honors Program consists of, amongst others:
 Community Projects, Master Classes, Entrepreneurship Course, Professional Trainings, International Internship and Research Labs.
@@ -35,7 +35,7 @@ Exam courses: Advanced Mathematics, Chemistry, Dutch, English, German, ICT, Lati
 
 
 #### Experience
-
+---
 * __Associate Consultant__ 							
 _May 2016 – August 2016_	
 Simon-Kucher & Partners – Amsterdam					   
@@ -47,21 +47,21 @@ Joanknecht & Van Zelst – Eindhoven
 Full-time work at the department Assurance, including various tasks such as interim controls, IT audits, compiling financial statements and preparing reports for corporate taxes or sales.
 
 * __Chairman__ 									
-_January 2015 – May 2015_	
+_January 2015 – May 2015_	  
 Outreaching Conference Day – Tilburg	                   
 Organized with a team of seven people, led the team in good order and conducted the external communication.		
 -> Participants: 150 – 200 persons	
 -> Theme: Corporate Social Responsibility: Do we really give back to society?
 
 * __Consultancy Intern__ 								
-_June 2014 – August 2014_	
+_June 2014 – August 2014_	  
 Youth Entrepreneurial Project – Bandar Lampung (Indonesia)	
 Providing business advice to six local SME’s after company visits through presentations and reports.
 
 
 
 #### Courses
-
+---
 * __Krauthammer Training__  
 Six professional training sessions about communication, leadership, bright side of management, tough side of management, team work and negotiation.
 
@@ -73,7 +73,7 @@ Research into the Integrity Management at Tilburg University. Provided great res
 
 
 #### Skills
-
+---
 * __Driving license__   
 Full current clean driving license.
 
