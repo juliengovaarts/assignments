@@ -1,0 +1,1299 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Adjusting the generosity of unemployment benefits over the business cycle(*)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "* Janneke Horenga (541639) - [jannekehorenga](http://jannekehorenga.github.io/)\n",
+    "* Bart de Geus (561375) - [bartdegeus](http://bartdegeus.github.io/)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "###### (*) Third assignment for the course Methods: Numerical Simulation, April 15th, 2016. We thank prof. Boone for his help on the fixed-point algorithm and numerous tips."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Research question\n",
+    "What would be the effect on job-search intensity, the value of average unemployment, unemployment duration and aggregate welfare of increasing the replacement rate of unemployment benefits during a recession?"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Motivation\n",
+    "During the Great Recession many European economies saw steep increases in the  unemployment rate (see this [Table from OECD data](https://data.oecd.org/chart/4v74)). With job finding rates low and more long-term unemployment, governments might expand the generosity of unemployment insurance benefits to ease economic pain for the unemployed and reduce the shortfall in aggregate demand [(Moffit 2014, p.5)](http://wol.iza.org/articles/unemployment-benefits-and-unemployment.pdf). One way is to lengthen the duration of the benefit period, the effects of which have already been surveyed by [Tatsiramos and Van Ours (2012)](http://onlinelibrary.wiley.com/doi/10.1111/joes.12005/abstract). A second option for governments is to increase the benefit level during a recession, which may be more effective in keeping up aggregate demand in the short-term. Benefit levels are commonly measured by the net income replacement rate, the ratio of benefits to the recepients earnings on the terminated job [(Moffit 2014, p.3)](http://wol.iza.org/articles/unemployment-benefits-and-unemployment.pdf).\n",
+    "\n",
+    "But any adjustment to the generosity of benefits must balance the improvement in welfare with expected side-effects, the most important of which is moral hazard among job-seekers. An increase in the replacement rate reduces the gains from taking a job during the benefit period and benefit recepients might lower their search effort in response. This could slow down a recovery [(Moffit 2014, p.6)](http://wol.iza.org/articles/unemployment-benefits-and-unemployment.pdf). We therefore ask what would be the effect of an increase in the replacement rate on the following labor market outcomes and welfare measures: job-search intensity, the value of unemployment, unemployment duration and aggregate welfare."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Method\n",
+    "We use a two-sided search-matching model of a dynamic labor market from [Boeri and Van Ours (2013, sec 11.9)](http://press.princeton.edu/titles/10142.html), which is a simplified version of the model used by [Boone and Van Ours (2006)](http://www.ingentaconnect.com/content/mohr/jite/2006/00000162/00000002/art00001/), to simulate the overall effects of a change in the replacement rate. Our model is limited in the sense that unemployement is caused by search frictions rather than demand shortfalls. Moreover, because the model does not include a feedback loop from changes in the replacement rate to product market demand, our work here is limited to an analysis of partial equilibrium.\n",
+    "\n",
+    "We look at the Dutch economy. We start with a [baseline scenario](#base) for which we normalize productivity. The baseline scenario corresponds to 2008, when real GDP growth was 1.7%. To simulate a [recession](#reces) we adjust the productivity parameter based on [data](#data) from the Netherlands during the Great Recession. We calculate the relative change in GDP per unit worked and compare labor market outcomes under both states of the business cycle. To answer our research question we increase the replacement rate of unemployment insurance benefits from $b=0.7$ to $b=0.8$ and compare steady-state labor market outcomes for the two different levels of the replacement rate.\n",
+    "\n",
+    "We conduct a sensitivity analysis to determine the robustness of our results to changes in __[variables]__."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Answer\n",
+    "A recession that is characterized by a 2.24 % decrease in labor productivity, an increase of the unemployment benefit replacement rate from 70% to 80% will cause a shift in unemployment of -17%, and the duration of unemployed will decline with 10%."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Main assumptions\n",
+    "We have made a number of assumptions.\n",
+    "* A labor market in equilibrium with unemployment as [modelled](#equations) in [Boeri and Van Ours (2013, sec 11.9)](http://press.princeton.edu/titles/10142.html);\n",
+    "* A fall in the level of labor productivity as a proxy for demand shortfall to simulate a recession;\n",
+    "* We take values for the [exogenous parameters](#exo) from [Boone and Van Ours (2006, p. 238-9)](http://www.ingentaconnect.com/content/mohr/jite/2006/00000162/00000002/art00001/) as an approximation of a labor market in a developed economy. We conduct a [sensitivity analysis](#sens) on  __[Variables]__;\n",
+    "* A [policy change](#pol) in which the unemployment benefit replacement rate is raised from 0.7 to 0.8.\n",
+    "\n",
+    "Some assumptions are implicit in the model:\n",
+    "* Labor is homogenous and all employed workers receive the same wage;\n",
+    "* Wages are flexible: unemployment arises because of search frictions;\n",
+    "* Workers and firms are risk-neutral;\n",
+    "* A linear felicity function of wages;\n",
+    "* Workers can adjust their search effort to influence the probability of finding a job;\n",
+    "* Unemployment insurance benefits are one-dimenional: there is a constant replacement rate and benefits last forever;\n",
+    "* Labor supply is exogenous and the total labor force is set to $1$ (cf Boone and Van Ours (2006))\n",
+    "* Entry for firms is free: the value of creating a vacancy ($J_{\\upsilon}$) is $0$"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Execution"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Importing libraries and packages"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [],
+   "source": [
+    "import math\n",
+    "import numpy as np\n",
+    "import pandas as pd\n",
+    "from scipy import arange, optimize\n",
+    "import matplotlib.pyplot as plt\n",
+    "%matplotlib inline"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Data<a id='data'></a>\n",
+    "Our values for exogenous parameters are taken from [Boone and Van Ours (2006, p. 238-9)](http://www.ingentaconnect.com/content/mohr/jite/2006/00000162/00000002/art00001/).\n",
+    "\n",
+    "We adjust the exogenous parameter for the productivity level to simulate a change in business cycle conditions. We adjust on the basis of observed reductions in a proxy for productivity, real GDP per hour worked (index measure), from [OECD.Stat](http://stats.oecd.org/viewhtml.aspx?datasetcode=PDB_GR&lang=en#) for the Netherlands during the Great Recession (2008-2013). "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "metadata": {
+    "collapsed": false,
+    "scrolled": false
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>year</th>\n",
+       "      <th>value_NL</th>\n",
+       "      <th>value_GR</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>2000</td>\n",
+       "      <td>91.3</td>\n",
+       "      <td>87.8</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>2001</td>\n",
+       "      <td>92.1</td>\n",
+       "      <td>91.4</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>2002</td>\n",
+       "      <td>92.7</td>\n",
+       "      <td>93.1</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>2003</td>\n",
+       "      <td>94.0</td>\n",
+       "      <td>97.2</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>2004</td>\n",
+       "      <td>95.6</td>\n",
+       "      <td>100.2</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>5</th>\n",
+       "      <td>2005</td>\n",
+       "      <td>98.0</td>\n",
+       "      <td>97.3</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>6</th>\n",
+       "      <td>2006</td>\n",
+       "      <td>99.5</td>\n",
+       "      <td>101.5</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>7</th>\n",
+       "      <td>2007</td>\n",
+       "      <td>100.3</td>\n",
+       "      <td>104.1</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>8</th>\n",
+       "      <td>2008</td>\n",
+       "      <td>100.3</td>\n",
+       "      <td>102.7</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>9</th>\n",
+       "      <td>2009</td>\n",
+       "      <td>97.9</td>\n",
+       "      <td>100.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>10</th>\n",
+       "      <td>2010</td>\n",
+       "      <td>100.0</td>\n",
+       "      <td>100.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>11</th>\n",
+       "      <td>2011</td>\n",
+       "      <td>100.7</td>\n",
+       "      <td>96.7</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>12</th>\n",
+       "      <td>2012</td>\n",
+       "      <td>100.5</td>\n",
+       "      <td>94.9</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>13</th>\n",
+       "      <td>2013</td>\n",
+       "      <td>100.8</td>\n",
+       "      <td>94.9</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>14</th>\n",
+       "      <td>2014</td>\n",
+       "      <td>101.7</td>\n",
+       "      <td>97.2</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>15</th>\n",
+       "      <td>2015</td>\n",
+       "      <td>102.8</td>\n",
+       "      <td>94.3</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "    year  value_NL  value_GR\n",
+       "0   2000      91.3      87.8\n",
+       "1   2001      92.1      91.4\n",
+       "2   2002      92.7      93.1\n",
+       "3   2003      94.0      97.2\n",
+       "4   2004      95.6     100.2\n",
+       "5   2005      98.0      97.3\n",
+       "6   2006      99.5     101.5\n",
+       "7   2007     100.3     104.1\n",
+       "8   2008     100.3     102.7\n",
+       "9   2009      97.9     100.0\n",
+       "10  2010     100.0     100.0\n",
+       "11  2011     100.7      96.7\n",
+       "12  2012     100.5      94.9\n",
+       "13  2013     100.8      94.9\n",
+       "14  2014     101.7      97.2\n",
+       "15  2015     102.8      94.3"
+      ]
+     },
+     "execution_count": 8,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "df = pd.read_csv('data_file.csv')\n",
+    "df"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 10,
+   "metadata": {
+    "collapsed": false,
+    "scrolled": true
+   },
+   "outputs": [
+    {
+     "data": {
+      "image/png": "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\nzVwrU37VXEPqYAeYAlwNIGkD4OfAyX0lEjMz67y21kwkXQJMBjYEeoFpwFXA5cDmwMPA4RHxlKTT\nSFd6PUBKPgHsGxGLGpTrmomZrdKqXjPxI+jNzLpA1ZNJFa7mMjNbpVT9h6yGg2smZmYtNly1CNdM\nzMxsleZkYmZmpTmZmJlZaU4mZmZWmpOJmZmV5mRiZmalOZmYmVlpTiZmZlaak4mZmZXmZGJmZqU5\nmZiZWWlOJmZmVpqTiZmZleZkYmartdXxcfHDwY+gN7NhMWbMFvT2PlyqjNGjx7Nw4UOtCaiJbnpc\nfJUfQe9kYmbDYjgOfsOhmw78VU4mbuYyM7PSnEzMrGu4f6O63MxlZsOim5p6Vucy3cxlZmaV4WRi\nZmaltTWZSLpAUq+kuwrDRkq6TtJ9kq6VtH5h3KmSHpA0T9K+7YzVVk9l2+QbtccPR5lmVdPWPhNJ\newDPAj+IiO3zsBnAkxFxjqSTgZERcYqkbYEfATsDY4Hrga0bdY64z8RapXy79MqXsg5Hmd2gm/oN\nVucyu7LPJCJuAhbXDX4fcFF+fxFwcH5/EHBpRLwYEQ8BDwC7tCNOMzMbnCr0mWwcEb0AEbEQ2DgP\n3wyYX5huQR5mZmYVU4VkUm9I9bhWX3s+HNezu8xqldmoL2L06PGAhvxK8w9vmcOxLqdPn166zOnT\np7d0uRstu8ssV+bIkaOZPn36K69Wavt9JpLGAzMLfSbzgMkR0StpDDA7IiZKOgWIiJiRp/slMC0i\nbmlQZnRL+6TLrFKZ7ouw1ZvUpX0mWS1N1lwDfCS/nwJcXRh+hKQ1Jb0BeCNwa7uCNDOzgRvRzg+T\ndAkwGdhQ0iPANOBs4HJJxwAPA4cDRMQ9ki4D7gGWASf4ki0zs2paZR6nUr0mFJdZ/TK7s6nHzVzW\nKt3ezGVmZqsYJxMzMyvNycTMzEpzMrGuNRz3hJjZ0LgDfnkpXdBh7DJXhe21LK9LaxV3wJuZWaU4\nmZiZWWlOJmZmVpqTiZmZleZkYmZmpTmZmJlZaU4mZmZWmpOJmZmV5mRiZmalOZmYmVlpTiZmZlaa\nk4mZmZXmZGJmZqU5mZiZWWlOJmZmVpqTiZmZleZkYmZmpTmZmJlZaZVJJpKmSpqbXyfmYTtIulnS\nHZJulTSp03GamdnKKpFMJG0HHAtMAnYEDpC0FXAOMC0idgKmAV/uXJRmZtbMiE4HkE0EbomIpQCS\n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\nAABJRU5ErkJggg==\n",
+      "text/plain": [
+       "<matplotlib.figure.Figure at 0x87692b0>"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "baseline = 100.0\n",
+    "plt.bar(df.year, df.value_NL-baseline, bottom=baseline)\n",
+    "plt.xlabel ('year')\n",
+    "plt.ylabel ('index', rotation=0)\n",
+    "plt.title ('Figure 1. Productivity (GDP per hour worked, NL)')\n",
+    "plt.savefig ('Productivity_bar.png')"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Model<a id='model'></a>"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "A simplified model form [Boeri and Van Ours (2013, sec 11.9)](http://press.princeton.edu/titles/10142.html)."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "#### Table 1. Exogenous parameters <a id='exo'></a>"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "|  Symbol  \t| Definition       \t|   \t|     Symbol     \t| Definition                  \t|\n",
+    "|:--------:\t|------------------\t|---\t|:--------------:\t|-----------------------------\t|\n",
+    "|    $b$   \t| replacement rate \t|   \t|     $\\beta$    \t| bargaining power of workers \t|\n",
+    "|  $\\rho$  \t| discount rate    \t|   \t|       $y$      \t| productivity level          \t|\n",
+    "| $\\kappa$ \t| search cost function parameter |   \t| $c_{\\upsilon}$ \t| cost of opening a vacancy\t|\n",
+    "|  $\\eta$  \t| matching function parameter \t|   \t|    $\\delta$    \t| job destruction rate |\n",
+    "|    $A$   \t| matching function parameter \t|   \t| \t|                   |"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 11,
+   "metadata": {
+    "collapsed": true
+   },
+   "outputs": [],
+   "source": [
+    "# Exogenous parameters from Boone and Van Ours (2006)\n",
+    "\n",
+    "rho = 0.025        # discount rate\n",
+    "kappa = 0.5        # search cost function parameter\n",
+    "eta = 0.5          # matching function parameter\n",
+    "A = 1.5            # efficiency of matching function\n",
+    "beta = 0.5         # bargaining power of workers\n",
+    "c_ups = 2.0        # cost of opening a vacancy\n",
+    "delta = 0.04       # job destruction rate"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "#### Table 2. Endogenous parameters <a id='endo'></a> (Steady state)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "collapsed": true
+   },
+   "source": [
+    "|     Symbol     | Definition                  |   |     Symbol    | Definition              |\n",
+    "|:--------------:|-----------------------------|---|:-------------:|-------------------------|\n",
+    "|    $\\gamma$    | disutility of job-search    |   |      $u$      | unemployed (share of labor force)    |\n",
+    "|       $s$      | job-search effort by worker |   |      $e$      | employed (share of labor force)      |\n",
+    "|      $V_u$     | value of unemployment       |   |      $m$      | period job matches      |\n",
+    "|      $V_e$     | value of employment         |   |    $\\theta$   | labor market tightness  |\n",
+    "|       $w$      | period wage                 |   |     $\\mu$     | job finding probability |\n",
+    "|      $J_e$     | value of a job              |   |      $t$      | tax rate                |\n",
+    "| $J_{\\upsilon}$ | value of a vacancy          |   |      $W$      | total welfare           |\n",
+    "|   $\\upsilon$   | number of vacancies         |   | $\\overline{u_t}$| average unemployment duration    |"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 12,
+   "metadata": {
+    "collapsed": true
+   },
+   "outputs": [],
+   "source": [
+    "# Restrictions on endogenous variables\n",
+    "\n",
+    "J_ups = 0          # Value of vacancy bid down to 0 (cf. Boone and Van Ours (2006))\n",
+    "\n",
+    "t = 0.0            # tax rate (set temporarily for finding fixed-points)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Model equations<a id='equations'></a>"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "#### Optimal job search intensity "
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "disutility of searching $$\\gamma\\left(s\\right)=\\frac{1-\\left(1-s\\right)^{1-\\kappa}}{1-\\kappa}-s$$\n",
+    "\n",
+    "with $ \\gamma(0)=0$ ; $ \\gamma'(0)=0$; $ \\gamma'(s)>0$ ; $ \\gamma''(s)>0$ ; $ \\lim_{s\\to 1} \\gamma'(s)=+\\infty $"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "flow value of being unemployed $$ \\rho V_u = \\underset{0 \\le s \\le 1}{max}\\{bw-\\gamma(s) + \\mu s (V_e - V_u) \\} $$"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "flow value of being employed\n",
+    "\n",
+    "$$ \\rho V_e = w + \\delta \\left(V_u - V_e \\right) $$"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "#### Vacancies and the matching function"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "flow of matches\n",
+    "\n",
+    "$$ m\\left(s u,\\upsilon\\right) = A \\left(su\\right)^{1-\\eta} \\upsilon^{\\eta} $$"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "search parameter for unemployed workers\n",
+    "$$ \\mu = \\frac{m \\left(su, \\upsilon \\right)}{su} = A\\theta^{\\eta} $$\n",
+    "\n",
+    "with $\\theta=\\frac{\\upsilon}{su}$"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "flow value of a job $$ \\rho J_e = y - (1+t)w + \\delta ( J_{\\upsilon} - J_e) $$"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "flow value of a vacancy\n",
+    "\n",
+    "$$ \\rho J_{\\upsilon} = -c_{\\upsilon}+\\frac{\\mu}{\\theta}(J_e - J_{\\upsilon}) $$"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "#### Wage bargaining"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "$$ \\underset{w}{max}\\{(V_e - V_u)^{\\beta}(J_e - J_{\\upsilon})^{1-\\beta}\\} $$\n",
+    "\n",
+    "which gives $$ w = (1 - \\beta) \\rho V_u + \\beta \\frac{y}{1+t} $$"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "#### Labor market participation"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "labor market equilibrium condition $$ \\mu s u = \\delta e $$"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "labor force participation rate $$ e + u = 1 $$\n",
+    "Total labor force normalized to $1$"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "#### Balanced budget requirement"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "$$ etw = ubw $$"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "#### Total welfare\n",
+    "\n",
+    "We add total welfare from [Boone and Van Ours (2006)](http://www.ingentaconnect.com/content/mohr/jite/2006/00000162/00000002/art00001/)."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "$$ W = uV_u + e(V_e+J_e)+\\upsilon J_{\\upsilon} $$"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "#### Average unemployment duration\n",
+    "Added from [Boone and Van Ours (2006, p.239)](http://www.ingentaconnect.com/content/mohr/jite/2006/00000162/00000002/art00001/).\n",
+    "$$\\overline{u_t} = \\frac{1}{\\mu(\\theta)}$$"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Calculations for steady states"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "#### Baseline scenario<a id='base'></a>\n",
+    "We start with a baseline scenario in which the economy is not in a recession. For this we can normalize the productivity parameter, $y=1$."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 13,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [],
+   "source": [
+    "# State of the economy\n",
+    "\n",
+    "y = 1.0            # productivity level\n",
+    "\n",
+    "# Baseline value of the unemployment benefit replacement rate\n",
+    "\n",
+    "b = 0.7            # replacement rate"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "We define those endogenous variables required to solve the model and find the other endogenous variables for our comparison of steady states."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 14,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [],
+   "source": [
+    "# disutility from job search\n",
+    "def gamma(s):\n",
+    "    return ((1.0-(1.0-s)**(1.0-kappa)))/(1.0-kappa) -s"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "##### Finding fixed-points\n",
+    "We solve the model by finding a fixed point of the  value function for the unemployed worker, $V_u$. We substitute in the definition of the optimal wage from wage bargaining, $w$, and the definiton of $J_e$ and $\\theta$."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 15,
+   "metadata": {
+    "collapsed": true
+   },
+   "outputs": [],
+   "source": [
+    "def fixed_point(v_u):\n",
+    "    w = (1.0-beta)*rho*v_u + beta * (y/(1.0+t))\n",
+    "    J_e = (y-(1.0+t)*w)/(rho+delta)\n",
+    "    theta = ((A*J_e)/(c_ups))**(1.0/(1.0-eta))\n",
+    "    # find optimal s for given values of theta and v_u    \n",
+    "    s_max = optimize.fminbound(lambda s: -(b*w - gamma(s) + A*(theta**eta)*s*(w/(rho+delta) - rho/(rho+delta)*v_u)),0,1,disp=1)\n",
+    "    output = (b*w - gamma(s_max) + A*(theta**eta)*s_max*(w/(rho+delta) - rho/(rho+delta)*v_u))/rho\n",
+    "    return output - v_u"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 16,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "array([ 36.13974892])"
+      ]
+     },
+     "execution_count": 16,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "V_u = optimize.fsolve(fixed_point, 5.0)\n",
+    "V_u"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "##### Finding values for endogenous variables"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "For completeness, we report to following formulas to find the steady state values of the endogenous variables:\n",
+    "\n",
+    "$$V_e = \\frac{w + \\delta V_u}{\\rho+\\delta} $$\n",
+    "$$u = \\frac{\\delta}{\\mu s + \\delta} $$\n",
+    "$$t = \\frac{ubw}{ew} $$\n",
+    "$$m(su,\\upsilon) = suA\\theta^{\\eta} $$\n",
+    "$$\\upsilon = (\\frac{m}{A(su)^{1-\\eta}})^\\frac{1}{\\eta} $$\n",
+    "\n",
+    "We assume the other values can readily be derived from the [model](#equations). "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 17,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [],
+   "source": [
+    "# endogenous variables (order of formulas is important)\n",
+    "w = (1.0-beta)*rho*V_u + beta * (y/(1.0+t))\n",
+    "J_e = (y-(1.0+t)*w)/(rho+delta)\n",
+    "theta = ((A*J_e)/(c_ups))**(1.0/(1.0-eta))\n",
+    "s = optimize.fminbound(lambda s: -(b*w - gamma(s) + A*(theta**eta)*s*(w/(rho+delta) - rho/(rho+delta)*V_u)),0,1,disp=1)\n",
+    "gamma = ((1.0-(1-s)**(1-kappa)))/(1-kappa) - s\n",
+    "mu = A*(theta**eta)\n",
+    "V_e = (w + delta*V_u)/(rho+delta)\n",
+    "u = delta/(mu*s + delta)\n",
+    "e = 1 - u\n",
+    "t = (u*b*w)/(e*w)\n",
+    "m = s*u*A*(theta**eta)\n",
+    "upsilon = (m/(A*(s*u)**(1-eta)))**(1/eta)\n",
+    "W = u*V_u + e*(V_e + J_e) # note: total value of vacancies is zero\n",
+    "u_t = 1/mu"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 18,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [],
+   "source": [
+    "# Create table for results.\n",
+    "endo_varnames = [\"V_u\",\"w\",\"J_e\",\"theta\",\"s\",\"gamma\",\"mu\",\"V_e\",\"u\",\"e\",\"t\",\"m\",\"upsilon\",\"W\",\"u_t\"]\n",
+    "endo_val_baseline = [V_u,w,J_e,theta,s,gamma,mu,V_e,u,e,t,m,upsilon,W,u_t]\n",
+    "for index, item in enumerate(endo_val_baseline):\n",
+    "    endo_val_baseline[index] = round(float(item),3)\n",
+    "table = dict(zip(endo_varnames, endo_val_baseline))"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 19,
+   "metadata": {
+    "collapsed": false,
+    "scrolled": true
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Variable  Baseline:y=1.0 & b=0.7  \n",
+      "V_u                36.14          \n",
+      "e                  0.928          \n",
+      "J_e                0.742          \n",
+      "W                 37.518          \n",
+      "u_t                1.197          \n",
+      "m                  0.037          \n",
+      "mu                 0.835          \n",
+      "V_e               36.882          \n",
+      "s                  0.619          \n",
+      "u                  0.072          \n",
+      "t                  0.054          \n",
+      "w                  0.952          \n",
+      "upsilon            0.014          \n",
+      "theta              0.31           \n",
+      "gamma              0.146          \n"
+     ]
+    }
+   ],
+   "source": [
+    "print \"{:<8} {:^25}\".format('Variable','Baseline:y=1.0 & b=0.7')\n",
+    "for k, v in table.iteritems():\n",
+    "    print \"{:<8} {:^25}\".format(k, v)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "We will hold off on presenting the baseline in a graph until the next section to enable comparison."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "collapsed": true
+   },
+   "source": [
+    "#### A recession<a id='reces'></a>\n",
+    "As a final step before we introduce our policy change, we compare the baseline scenario with the recession. The OECD [data](#data) shows a decline in productivity in the Netherlands during the beginning of the recession. We compare the baseline scenario of 2008 to productivity in 2009 for maximum effect. Below we caculate the productivity variable $y_{low} = 0.976$"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 20,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "0.97607178464606192"
+      ]
+     },
+     "execution_count": 20,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "b = 0.7 # We keep the replacement rate constant\n",
+    "\n",
+    "# lowest productivity during recession\n",
+    "y_low = df.value_NL[9]/df.value_NL[8]\n",
+    "y_low"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "We again solve the model for the endogenous variables in this steady state."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 21,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [],
+   "source": [
+    "# find fixed point\n",
+    "t = 0.0\n",
+    "\n",
+    "def gamma(s):\n",
+    "    return ((1.0-(1.0-s)**(1.0-kappa)))/(1.0-kappa) -s\n",
+    "\n",
+    "def fixed_point(v_u):\n",
+    "    w = (1.0-beta)*rho*v_u + beta * (y_low/(1.0+t))\n",
+    "    J_e = (y_low-(1.0+t)*w)/(rho+delta)\n",
+    "    theta = ((A*J_e)/(c_ups))**(1.0/(1.0-eta))\n",
+    "    # find optimal s for given values of theta and v_u    \n",
+    "    s_max = optimize.fminbound(lambda s: -(b*w - gamma(s) + A*(theta**eta)*s*(w/(rho+delta) - rho/(rho+delta)*v_u)),0,1,disp=1)\n",
+    "    output = (b*w - gamma(s_max) + A*(theta**eta)*s_max*(w/(rho+delta) - rho/(rho+delta)*v_u))/rho\n",
+    "    return output - v_u"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 22,
+   "metadata": {
+    "collapsed": false,
+    "scrolled": false
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "array([ 35.2162615])"
+      ]
+     },
+     "execution_count": 22,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "V_u = optimize.fsolve(fixed_point, 5.0)\n",
+    "V_u"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 23,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [],
+   "source": [
+    "# endogenous variables\n",
+    "w = (1.0-beta)*rho*V_u + beta * (y/(1.0+t))\n",
+    "J_e = (y-(1.0+t)*w)/(rho+delta)\n",
+    "theta = ((A*J_e)/(c_ups))**(1.0/(1.0-eta))\n",
+    "s_max = optimize.fminbound(lambda s: -(b*w - gamma(s) + A*(theta**eta)*s*(w/(rho+delta) - rho/(rho+delta)*V_u)),0,1,disp=1)\n",
+    "gamma = ((1.0-(1-s_max)**(1-kappa)))/(1-kappa) - s_max\n",
+    "mu = A*(theta**eta)\n",
+    "V_e = (w + delta*V_u)/(rho+delta)\n",
+    "u = delta/(mu*s_max + delta)\n",
+    "e = 1 - u\n",
+    "t = (u*b*w)/(e*w)\n",
+    "m = s_max*u*A*(theta**eta)\n",
+    "upsilon = (m/(A*(s_max*u)**(1-eta)))**(1/eta)\n",
+    "W = u*V_u + e*(V_e + J_e) # note: total value of vacancies is zero\n",
+    "u_t = 1/mu"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 24,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [],
+   "source": [
+    "# Create table for results.\n",
+    "endo_val_recession = [V_u,w,J_e,theta,s,gamma,mu,V_e,u,e,t,m,upsilon,W,u_t]\n",
+    "for index, item in enumerate(endo_val_recession):\n",
+    "    endo_val_recession[index] = round(float(item),3)\n",
+    "table = dict(zip(endo_varnames, endo_val_recession))"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 25,
+   "metadata": {
+    "collapsed": false,
+    "scrolled": true
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Variable Recession:y=0.976 & b=0.7\n",
+      "V_u               35.216          \n",
+      "e                  0.95           \n",
+      "J_e                0.92           \n",
+      "W                 36.965          \n",
+      "u_t                0.966          \n",
+      "m                  0.038          \n",
+      "mu                 1.035          \n",
+      "V_e               36.136          \n",
+      "s                  0.619          \n",
+      "u                  0.05           \n",
+      "t                  0.037          \n",
+      "w                  0.94           \n",
+      "upsilon            0.017          \n",
+      "theta              0.476          \n",
+      "gamma              0.238          \n"
+     ]
+    }
+   ],
+   "source": [
+    "print \"{:<8} {:^25}\".format('Variable','Recession:y=0.976 & b=0.7')\n",
+    "for k, v in table.iteritems():\n",
+    "    print \"{:<8} {:^25}\".format(k, v)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "In Table 3 below we present our intermediate results of simulations for steady states over the business cycle."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "__Table 3. Comparison of steady states over the business cycle with constant policy__\n",
+    "\n",
+    "| Variable   | Baseline y = 1.0 & b = 0.7 | Recession y = 0.976 & b = 0.7  |\n",
+    "|------------|:--------------------------:|:------------------------------:|\n",
+    "| $V_u$      |           36.140           |             35.216             |\n",
+    "| $w$        |            0.952           |              0.952             |\n",
+    "| $J_e$      |            0.742           |              0.920             |\n",
+    "| $\\theta$   |            0.310           |              0.476             |\n",
+    "| $s$        |            0.619           |              0.619             |\n",
+    "| $\\gamma$   |            0.146           |              0.238             |\n",
+    "| $\\mu$      |            0.835           |              1.035             |\n",
+    "| $V_e$      |           36.882           |              34.24             |\n",
+    "| $u$        |            0.072           |              0.050             |\n",
+    "| $e$        |            0.928           |              0.950             |\n",
+    "| $t$        |            0.054           |              0.037             |\n",
+    "| $m$        |            0.037           |              0.038             |\n",
+    "| $\\upsilon$ |            0.014           |              0.017             |\n",
+    "| $W$        |           37.518           |             36.965             |\n",
+    "| $u_t$      |            1.197           |              0.966             |"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "#### Policy change: a higher replacement rate during recession<a id='pol'></a>"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "We set b = 0.8, an increase of 10 %pt, or a raise of about 14.3%"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 26,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "0.97607178464606192"
+      ]
+     },
+     "execution_count": 26,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "b = 0.8 # We adjust the replacement rate\n",
+    "\n",
+    "y_low # We keep the economy in recession"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "We again solve the model for the endogenous variables in the new steady state."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 27,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [],
+   "source": [
+    "# find fixed point\n",
+    "t = 0.0\n",
+    "\n",
+    "def gamma(s):\n",
+    "    return ((1.0-(1.0-s)**(1.0-kappa)))/(1.0-kappa) -s\n",
+    "\n",
+    "def fixed_point(v_u):\n",
+    "    w = (1.0-beta)*rho*v_u + beta * (y_low/(1.0+t))\n",
+    "    J_e = (y_low-(1.0+t)*w)/(rho+delta)\n",
+    "    theta = ((A*J_e)/(c_ups))**(1.0/(1.0-eta))\n",
+    "    # find optimal s for given values of theta and v_u    \n",
+    "    s_max = optimize.fminbound(lambda s: -(b*w - gamma(s) + A*(theta**eta)*s*(w/(rho+delta) - rho/(rho+delta)*v_u)),0,1,disp=1)\n",
+    "    output = (b*w - gamma(s_max) + A*(theta**eta)*s_max*(w/(rho+delta) - rho/(rho+delta)*v_u))/rho\n",
+    "    return output - v_u"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 28,
+   "metadata": {
+    "collapsed": false,
+    "scrolled": false
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "array([ 35.7152541])"
+      ]
+     },
+     "execution_count": 28,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "V_u = optimize.fsolve(fixed_point, 5.0)\n",
+    "V_u"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 29,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [],
+   "source": [
+    "# endogenous variables\n",
+    "w = (1.0-beta)*rho*V_u + beta * (y/(1.0+t))\n",
+    "J_e = (y-(1.0+t)*w)/(rho+delta)\n",
+    "theta = ((A*J_e)/(c_ups))**(1.0/(1.0-eta))\n",
+    "s_max = optimize.fminbound(lambda s: -(b*w - gamma(s) + A*(theta**eta)*s*(w/(rho+delta) - rho/(rho+delta)*V_u)),0,1,disp=1)\n",
+    "gamma = ((1.0-(1-s_max)**(1-kappa)))/(1-kappa) - s_max\n",
+    "mu = A*(theta**eta)\n",
+    "V_e = (w + delta*V_u)/(rho+delta)\n",
+    "u = delta/(mu*s_max + delta)\n",
+    "e = 1 - u\n",
+    "t = (u*b*w)/(e*w)\n",
+    "m = s_max*u*A*(theta**eta)\n",
+    "upsilon = (m/(A*(s_max*u)**(1-eta)))**(1/eta)\n",
+    "W = u*V_u + e*(V_e + J_e) # note: total value of vacancies is zero\n",
+    "u_t = 1/mu"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 30,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [],
+   "source": [
+    "# Create table for results.\n",
+    "endo_val_policy = [V_u,w,J_e,theta,s,gamma,mu,V_e,u,e,t,m,upsilon,W,u_t]\n",
+    "for index, item in enumerate(endo_val_policy):\n",
+    "    endo_val_policy[index] = round(float(item),3)\n",
+    "table = dict(zip(endo_varnames, endo_val_policy))"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 31,
+   "metadata": {
+    "collapsed": false,
+    "scrolled": true
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Variable Policy change:y=0.976 & b=0.8\n",
+      "V_u               35.715          \n",
+      "e                  0.94           \n",
+      "J_e                0.824          \n",
+      "W                 37.265          \n",
+      "u_t                1.079          \n",
+      "m                  0.038          \n",
+      "mu                 0.927          \n",
+      "V_e               36.539          \n",
+      "s                  0.619          \n",
+      "u                  0.06           \n",
+      "t                  0.051          \n",
+      "w                  0.946          \n",
+      "upsilon            0.015          \n",
+      "theta              0.382          \n",
+      "gamma              0.188          \n"
+     ]
+    }
+   ],
+   "source": [
+    "print \"{:<8} {:^25}\".format('Variable','Policy change:y=0.976 & b=0.8')\n",
+    "for k, v in table.iteritems():\n",
+    "    print \"{:<8} {:^25}\".format(k, v)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Results"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": []
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "| Variable   | Baseline y = 1.0 & b = 0.7 | Recession y = 0.976 & b = 0.7  | Policy change y = 0.976 & b = 0.8 |\n",
+    "|------------|:--------------------------:|:------------------------------:|:---------------------------------:|\n",
+    "| $V_u$      |           36.140           |             35.216             |              35.715               |\n",
+    "| $w$        |            0.952           |              0.940             |               0.946               |\n",
+    "| $J_e$      |            0.742           |              0.920             |               0.824               |\n",
+    "| $\\theta$   |            0.310           |              0.476             |               0.382               |\n",
+    "| $s$        |            0.619           |              0.619             |               0.619               |\n",
+    "| $\\gamma$   |            0.146           |              0.238             |               0.188               |\n",
+    "| $\\mu$      |            0.835           |              1.035             |               0.927               |\n",
+    "| $V_e$      |           36.882           |             36.136             |              36.539               |\n",
+    "| $u$        |            0.072           |              0.050             |               0.060               |\n",
+    "| $e$        |            0.928           |              0.950             |               0.940               |\n",
+    "| $t$        |            0.054           |              0.037             |               0.051               |\n",
+    "| $m$        |            0.037           |              0.038             |               0.038               |\n",
+    "| $\\upsilon$ |            0.014           |              0.017             |               0.015               |\n",
+    "| $W$        |           37.518           |             36.965             |              37.265               |\n",
+    "| $u_t$      |            1.197           |              0.966             |               1.079               |"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 32,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [
+    {
+     "data": {
+      "image/png": "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\nMzOry/8PFkqzU2iH6tUAAAAASUVORK5CYII=\n",
+      "text/plain": [
+       "<matplotlib.figure.Figure at 0x87e28f0>"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "text/plain": [
+       "<matplotlib.figure.Figure at 0x8829ff0>"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "range_b = (0.70,0.80)\n",
+    "range_W = (36.965,37.265)\n",
+    "range_u = (0.050, 0.060)\n",
+    "range_u_t = (0.966,1.079)\n",
+    "range_V_u = (35.216, 35.715)\n",
+    "\n",
+    "f, (ax1,ax2,ax3,ax4) = plt.subplots(4, sharex = True)\n",
+    "ax1.set_title ('Figure 2. Policy change of b')\n",
+    "ax1.plot(range_b, range_u, 'r-', 0.7,0.072, 'ro')\n",
+    "ax1.set_ylim([0.04,0.08])\n",
+    "ax1.set_ylabel ('u')\n",
+    "ax2.plot(range_b, range_u_t, 'b-', 0.7,1.197,'bo')\n",
+    "ax2.set_ylim([0.90, 1.25])\n",
+    "ax2.set_ylabel ('$u_t$')\n",
+    "ax3.plot(range_b, range_W, 'g-', 0.7,37.265, 'go')\n",
+    "ax3.set_ylim([36.5, 37.5])\n",
+    "ax3.set_ylabel('W')\n",
+    "ax4.plot(range_b, range_V_u, 'm-', 0.7,35.715,'mo')\n",
+    "ax4.set_ylim([35.0,38.0])\n",
+    "ax4.set_ylabel('V_u')\n",
+    "ax4.set_xlabel('b')\n",
+    "ax4.set_xlim([0.69,0.81])\n",
+    "\n",
+    "plt.show()\n",
+    "plt.savefig('Policy change of b.png')"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Figure 2 shows the effect of a 14.3% change of the replacement rate on the unemployment, the search intensity, and the value of umemployment. The bold circle represents the basline value, so if `y= 1.0` and the line shows the changes during a recession (`y=0.97x`). \n",
+    "\n",
+    "#### Start of recession  \n",
+    "\n",
+    "The recession is associated with decreasing productivity. Agents are being paid by their level of productivity and a lower productivity leads to a small change of -1% in period wage ($w$) and hence a same reducement rate of total welfare ($W$). Less total welfare conducts a 31% drop of collected tax ($t$). On the other hand a recession is accompanied by an increase of the social job value ($J_e$), because it can be uncertain if the agent can keep his job and he still enjoys a certain level of income and other benefits such as health insurance. This is in contrast with a 2% decrease of value of employment ($V_e$) seeing a lower payoff for exactly the same job. Additionally, the value of being unemployed ($V_u$) is dropping as well, this can be explained by the fact that if the agent is unemployed he can not sustain the same life/utilities. Employed agents are willing to make some sacrifices to avoid resignation, which results in a tighter labor market ($\\theta$) of 54%, and beside $\\theta$ the disutility of searching for a job ($\\gamma$) has increased a lot as well with a 63% with repect to the default scenario. Despite the difficulties of findig a new job, the search intensity ($s$) is not changing. \n",
+    "\n",
+    "The recession shows us some inexplicable values as well. The number of vacancies ($v$) is increasing what results in a bigger probability of finding a job ($\\mu$), change of 24%, and therefore an upturn of period job matches ($m$), 3%. The unemployment rate is declining due to the vacancies effect. \n",
+    "\n",
+    "#### Governement interference\n",
+    "\n",
+    "If the governement pays a higher replacement rate, the monetary trigger to find a new job will be omitted little by little and disappear eventually for some unemployed agents. Not having a job will not always make you happier, since people need gratification and this can be accomplished by having a job. This missing incentive will cause a higher voluntarily unemployed (20% raise), and therefore the labor market tightness ($\\theta$) is decreasing with 20%. The ratio of unemployment has a greater impact on finding a job than the ratio of $\\theta$ resulting in a lower $\\mu$, -10%. A lower $\\theta$ is also inducing a lower $\\gamma$, finding a job will be easier and less unpleasant.   \n",
+    "\n",
+    "\n",
+    "Agents want to consume as much as before the financial crisis, this is their reference point. If the replacement rate keeps raising, the disposible income and therefore the total welfare ($W$) will eventually exceed the default total welfare. Since total welfare is growing the governmennt can collect more tax over income, product and services (+38%). The value of unemployment ($V_u$) will increase a little with 1% due to this policy, because, though the utility of the unemployed agents raises with a higher replacement rate, when a job is found the expected flow of additional income will be less. The value of being employed ($V_e$) gets a boost of 1% as well, because of the higher period wage ($w$). The value of a job ($J_e$) is declining with 10%, since the agents does not need the additional benefits of a job as much as with a lower replacement rate and therefore does not gain a lot by finding a job. By the smaller amount of vacancies at government interference during a recession (-12%), the duration of unemployment ($u_t$) is increasing with 12%."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Sensitivity analysis<a id='sens'></a>\n",
+    "On A and/or rho?\n",
+    "Take drastic recession, e.g. Spain or Greece?\n",
+    "\n",
+    "__[Work]__"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Conclusion and discussion of results\n",
+    "\n",
+    "The are two major limitations. We have conducted a partial-equilibrium analysis of the effects of an increase in the replacement rate of unemployment benefits on labor market outcomes. Since our model does not include feedback effects from higher unemployment benefits via aggregate demand to demand for labor, we consider our results to be a worst-case scenario. Most likely, the higher unemployment benefits will result in a positive feedback on labor productivity, ultimately leading to a higher employment rate. Similarly, we have abstracted from labor supply decisions.\n",
+    "\n",
+    "\n",
+    "\n",
+    "__[More on results]__\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "collapsed": true
+   },
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 2",
+   "language": "python",
+   "name": "python2"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 2
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython2",
+   "version": "2.7.11"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 0
+}
